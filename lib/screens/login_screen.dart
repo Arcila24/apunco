@@ -9,137 +9,225 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final SupabaseClient supabase = Supabase.instance.client;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final SupabaseClient _supabase = Supabase.instance.client;
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
-  void loginUser() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+  Future<void> _loginUser() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      showMessage("Por favor, completa todos los campos");
+      _showMessage("Por favor, completa todos los campos");
       return;
     }
 
+    setState(() => _isLoading = true);
+
     try {
-      final response = await supabase.auth.signInWithPassword(
+      final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
       if (response.user != null) {
-        // Redirige a UploadScreen después del login exitoso
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => UploadScreen()),
         );
       }
     } catch (e) {
-      showMessage("Usuario o contraseña incorrectos");
+      _showMessage("Usuario o contraseña incorrectos");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
   
-  void resetPassword() async {
-    String email = emailController.text.trim();
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      showMessage("Ingresa tu correo para restablecer la contraseña");
+      _showMessage("Ingresa tu correo para restablecer la contraseña");
       return;
     }
 
     try {
-      await supabase.auth.resetPasswordForEmail(email);
-      showMessage("Correo de recuperación enviado", isError: false);
+      await _supabase.auth.resetPasswordForEmail(email);
+      _showMessage("Correo de recuperación enviado", isError: false);
     } catch (e) {
-      showMessage("Error al enviar correo de recuperación");
+      _showMessage("Error al enviar correo de recuperación");
     }
   }
 
-  void showMessage(String message, {bool isError = true}) {
+  void _showMessage(String message, {bool isError = true}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    final theme = Theme.of(context);
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Center(
-            child: SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                    maxWidth: screenWidth * 0.9,
-                    maxHeight: constraints.maxHeight),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.primaryColor.withOpacity(0.8),
+              theme.scaffoldBackgroundColor,
+            ],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth < 600 ? 20 : 40),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Iniciar Sesión",
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 20),
-                      TextField(
-                        controller: emailController,
-                        decoration: InputDecoration(
-                          labelText: "Correo Electrónico",
-                          border: OutlineInputBorder(),
+                  padding: EdgeInsets.all(isSmallScreen ? 24.0 : 32.0),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 500),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.cloud_circle,
+                          size: 80,
+                          color: theme.primaryColor,
                         ),
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      SizedBox(height: 20),
-                      TextField(
-                        controller: passwordController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: "Contraseña",
-                          border: OutlineInputBorder(),
+                        SizedBox(height: 24),
+                        Text(
+                          "Iniciar Sesión",
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.primaryColor,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: loginUser,
-                        child: Text("Iniciar Sesión"),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size(double.infinity, 50),
+                        SizedBox(height: 32),
+                        TextField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            labelText: "Correo Electrónico",
+                            prefixIcon: Icon(Icons.email),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
                         ),
-                      ),
-                      SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => RegisterScreen()),
-                          );
-                        },
-                        child: Text("Registrarse"),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: Size(double.infinity, 50),
-                          backgroundColor:
-                              const Color.fromARGB(255, 32, 181, 255),
+                        SizedBox(height: 16),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            labelText: "Contraseña",
+                            prefixIcon: Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword 
+                                    ? Icons.visibility 
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: resetPassword,
-                        child: Text("¿Olvidaste tu contraseña?"),
-                      ),
-                    ],
+                        SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _resetPassword,
+                            child: Text(
+                              "¿Olvidaste tu contraseña?",
+                              style: TextStyle(color: theme.primaryColor),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _loginUser,
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              backgroundColor: theme.primaryColor,
+                            ),
+                            child: _isLoading
+                                ? CircularProgressIndicator(color: Colors.white)
+                                : Text(
+                                    "Iniciar Sesión",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Divider(thickness: 1),
+                        SizedBox(height: 16),
+                        Text(
+                          "¿No tienes una cuenta?",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => RegisterScreen()),
+                              );
+                            },
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              side: BorderSide(color: theme.primaryColor),
+                            ),
+                            child: Text(
+                              "Registrarse",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: theme.primaryColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
