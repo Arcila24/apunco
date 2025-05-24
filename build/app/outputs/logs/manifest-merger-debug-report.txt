@@ -2,6 +2,8 @@
 application
 INJECTED from /home/arcila24/Escritorio/apunco/android/app/src/main/AndroidManifest.xml:4:5-35:19
 INJECTED from /home/arcila24/Escritorio/apunco/android/app/src/debug/AndroidManifest.xml
+MERGED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-33:19
+MERGED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-33:19
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-12:19
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-12:19
 MERGED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:5-26:19
@@ -34,6 +36,7 @@ INJECTED from /home/arcila24/Escritorio/apunco/android/app/src/debug/AndroidMani
 INJECTED from /home/arcila24/Escritorio/apunco/android/app/src/debug/AndroidManifest.xml:1:1-7:12
 MERGED from [:file_picker] /home/arcila24/Escritorio/apunco/build/file_picker/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-15:12
 MERGED from [:shared_preferences_android] /home/arcila24/Escritorio/apunco/build/shared_preferences_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-35:12
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-14:12
 MERGED from [:app_links] /home/arcila24/Escritorio/apunco/build/app_links/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [:flutter_keyboard_visibility] /home/arcila24/Escritorio/apunco/build/flutter_keyboard_visibility/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
@@ -143,6 +146,8 @@ MERGED from [:file_picker] /home/arcila24/Escritorio/apunco/build/file_picker/in
 MERGED from [:file_picker] /home/arcila24/Escritorio/apunco/build/file_picker/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:shared_preferences_android] /home/arcila24/Escritorio/apunco/build/shared_preferences_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:shared_preferences_android] /home/arcila24/Escritorio/apunco/build/shared_preferences_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:app_links] /home/arcila24/Escritorio/apunco/build/app_links/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
@@ -279,6 +284,34 @@ action#android.intent.action.GET_CONTENT
 ADDED from [:file_picker] /home/arcila24/Escritorio/apunco/build/file_picker/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:13-72
 	android:name
 		ADDED from [:file_picker] /home/arcila24/Escritorio/apunco/build/file_picker/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:21-69
+provider#dev.fluttercommunity.plus.share.ShareFileProvider
+ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:9-21:20
+	android:grantUriPermissions
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:17:13-47
+	android:authorities
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:13-74
+	android:exported
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:16:13-37
+	android:name
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:13-77
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:18:13-20:68
+	android:resource
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:20:17-65
+	android:name
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:19:17-67
+receiver#dev.fluttercommunity.plus.share.SharePlusPendingIntent
+ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:26:9-32:20
+	android:exported
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:28:13-37
+	android:name
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:27:13-82
+intent-filter#action:name:EXTRA_CHOSEN_COMPONENT
+ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:29:13-31:29
+action#EXTRA_CHOSEN_COMPONENT
+ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:30:17-65
+	android:name
+		ADDED from [:share_plus] /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:30:25-62
 activity#io.flutter.plugins.urllauncher.WebViewActivity
 ADDED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:9-11:74
 	android:exported
@@ -311,12 +344,6 @@ ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/inter
 		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:13-48
 	android:name
 		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:17:13-64
-meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:22:13-24:53
-	android:resource
-		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:24:17-50
-	android:name
-		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:23:17-67
 provider#androidx.startup.InitializationProvider
 ADDED from [androidx.emoji2:emoji2:1.2.0] /home/arcila24/.gradle/caches/8.10.2/transforms/d221757f531c672c2df2db4ebaa2cbf1/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
 MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /home/arcila24/.gradle/caches/8.10.2/transforms/9a58102024d2bac5d1ee1e1203812678/transformed/jetified-lifecycle-process-2.8.7/AndroidManifest.xml:24:9-32:20

@@ -49,5 +49,6 @@ com.example.apunco.app-debug-47 /home/arcila24/Escritorio/apunco/build/flutter_k
 com.example.apunco.app-debug-48 /home/arcila24/Escritorio/apunco/build/flutter_plugin_android_lifecycle/intermediates/packaged_res/debug/packageDebugResources
 com.example.apunco.app-debug-49 /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/packaged_res/debug/packageDebugResources
 com.example.apunco.app-debug-50 /home/arcila24/Escritorio/apunco/build/path_provider_android/intermediates/packaged_res/debug/packageDebugResources
-com.example.apunco.app-debug-51 /home/arcila24/Escritorio/apunco/build/shared_preferences_android/intermediates/packaged_res/debug/packageDebugResources
-com.example.apunco.app-debug-52 /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/packaged_res/debug/packageDebugResources
+com.example.apunco.app-debug-51 /home/arcila24/Escritorio/apunco/build/share_plus/intermediates/packaged_res/debug/packageDebugResources
+com.example.apunco.app-debug-52 /home/arcila24/Escritorio/apunco/build/shared_preferences_android/intermediates/packaged_res/debug/packageDebugResources
+com.example.apunco.app-debug-53 /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/packaged_res/debug/packageDebugResources

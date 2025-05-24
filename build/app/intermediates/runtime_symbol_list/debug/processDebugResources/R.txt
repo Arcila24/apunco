@@ -2184,4 +2184,5 @@ int styleable ViewStubCompat_android_id 0
 int styleable ViewStubCompat_android_layout 1
 int styleable ViewStubCompat_android_inflatedId 2
 int xml filepaths 0x7f100000
-int xml image_share_filepaths 0x7f100001
+int xml flutter_share_file_paths 0x7f100001
+int xml image_share_filepaths 0x7f100002

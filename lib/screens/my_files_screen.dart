@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:io';
-import 'text_editor_screen.dart'; // Asegúrate de importar el editor de texto
+import 'text_editor_screen.dart';
 
 class MyFilesScreen extends StatefulWidget {
   const MyFilesScreen({Key? key}) : super(key: key);
@@ -18,6 +19,7 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   bool _isOpeningFile = false;
+  bool _isSharingFile = false;
 
   @override
   void initState() {
@@ -107,7 +109,6 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
     setState(() => _isOpeningFile = true);
     
     try {
-      // Mostrar indicador de progreso
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -121,23 +122,18 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
         ),
       );
 
-      // Descargar archivo
       final response = await _supabase.storage
           .from('useruploads')
           .download(file['fullPath']);
 
-      // Crear archivo temporal
       final tempDir = await getTemporaryDirectory();
       final tempFile = File('${tempDir.path}/${file['name']}');
       await tempFile.writeAsBytes(response);
 
-      // Cerrar el SnackBar de progreso
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      // Abrir con aplicación externa
       final result = await OpenFilex.open(tempFile.path);
 
-      // Manejar resultado
       if (result.type != ResultType.done) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -159,16 +155,53 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
     }
   }
 
+  Future<void> _shareFile(Map<String, dynamic> file) async {
+    if (_isSharingFile) return;
+    
+    setState(() => _isSharingFile = true);
+    
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preparando archivo para compartir...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      final response = await _supabase.storage
+          .from('useruploads')
+          .download(file['fullPath']);
+
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/${file['name']}');
+      await tempFile.writeAsBytes(response);
+
+      await Share.shareXFiles(
+        [XFile(tempFile.path)],
+        text: 'Te comparto este archivo: ${file['name']}',
+        subject: 'Compartiendo archivo',
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al compartir archivo: ${e.toString()}'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      setState(() => _isSharingFile = false);
+    }
+  }
+
   Future<void> _editTextFile(Map<String, dynamic> file) async {
     try {
-      // Descargar el contenido del archivo
       final response = await _supabase.storage
           .from('useruploads')
           .download(file['fullPath']);
       
       final fileContent = String.fromCharCodes(response);
       
-      // Navegar a la pantalla de edición
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -180,7 +213,6 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
         ),
       );
       
-      // Actualizar la lista después de editar
       await _fetchFiles();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -241,6 +273,14 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
               onTap: () {
                 Navigator.pop(context);
                 _editTextFile(file);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.share),
+              title: const Text('Compartir'),
+              onTap: () {
+                Navigator.pop(context);
+                _shareFile(file);
               },
             ),
             ListTile(
