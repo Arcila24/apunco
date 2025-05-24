@@ -1,11 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as path;
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import 'login_screen.dart';
 import 'text_editor_screen.dart';
 import 'my_files_screen.dart';
@@ -17,9 +15,10 @@ class UploadScreen extends StatefulWidget {
 
 class _UploadScreenState extends State<UploadScreen> {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final TextEditingController _fileNameController = TextEditingController();
   int _selectedIndex = 0;
   bool _isUploading = false;
-  double _uploadProgress = 0;
+  PlatformFile? _selectedFile;
 
   static const List<Map<String, dynamic>> _menuOptions = [
     {'icon': Icons.cloud_upload, 'title': 'Subir Archivo'},
@@ -27,117 +26,158 @@ class _UploadScreenState extends State<UploadScreen> {
     {'icon': Icons.folder, 'title': 'Mis Archivos'},
   ];
 
-  Future<void> _uploadFile() async {
+  Future<void> _selectFile() async {
     try {
-      setState(() {
-        _isUploading = true;
-        _uploadProgress = 0;
-      });
-
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('Debes iniciar sesión primero');
-
       final result = await FilePicker.platform.pickFiles(
         allowMultiple: false,
         type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'txt', 'doc', 'docx'],
+        allowedExtensions: [
+          'jpg',
+          'jpeg',
+          'png',
+          'pdf',
+          'txt',
+          'doc',
+          'docx',
+          'xls',
+          'xlsx',
+          'ppt',
+          'pptx'
+        ],
       );
 
-      if (result == null || result.files.isEmpty) {
-        setState(() => _isUploading = false);
-        return;
-      }
+      if (result == null || result.files.isEmpty) return;
 
-      final file = result.files.first;
-      final filePath = file.path!;
-      final fileExtension = path.extension(filePath).replaceAll('.', '').toLowerCase();
-      final mimeType = lookupMimeType(filePath) ?? 'application/octet-stream';
+      setState(() {
+        _selectedFile = result.files.first;
+        _fileNameController.text = _selectedFile!.name.split('.').first;
+      });
 
-      final userFolder = user.email?.split('@').first ?? 'user_${user.id.substring(0, 6)}';
-      
-      String typeFolder;
-      if (fileExtension == 'txt' || fileExtension == 'doc' || fileExtension == 'docx') {
-        typeFolder = 'documents';
-      } else if (fileExtension == 'jpg' || fileExtension == 'jpeg' || fileExtension == 'png') {
-        typeFolder = 'images';
-      } else if (fileExtension == 'pdf') {
-        typeFolder = 'pdfs';
-      } else {
-        typeFolder = 'others';
-      }
-
-      final storagePath = 'usuarios/$userFolder/$typeFolder/${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
-
-      final fileBytes = await File(filePath).readAsBytes();
-      
-      await _supabase.storage.from('useruploads').uploadBinary(
-            storagePath,
-            fileBytes,
-            fileOptions: FileOptions(contentType: mimeType),
-          );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Archivo subido exitosamente a $typeFolder'),
-            ],
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.green,
-        ),
-      );
+      await _showFileNameDialog();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.error_outline, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Error: ${e.toString()}'),
-            ],
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isUploading = false);
-      }
+      _showErrorSnackbar('Error al seleccionar archivo: ${e.toString()}');
     }
   }
 
-  Future<void> _downloadAndOpenFile(String filePath) async {
+  Future<void> _showFileNameDialog() async {
+    if (_selectedFile == null) return;
+
+    final extension = path.extension(_selectedFile!.name!).replaceAll('.', '');
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Nombre del archivo'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _fileNameController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Ingrese el nombre del archivo',
+                  suffixText: '.$extension',
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Tamaño: ${(_selectedFile!.size! / 1024).toStringAsFixed(2)} KB',
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCELAR'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, _fileNameController.text),
+              child: const Text('SUBIR'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newName != null && newName.isNotEmpty) {
+      await _uploadFile();
+    }
+  }
+
+  Future<void> _uploadFile() async {
+    if (_selectedFile == null) return;
+
     try {
-      final response = await _supabase.storage
-          .from('useruploads')
-          .download(filePath);
+      setState(() => _isUploading = true);
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw Exception('Debes iniciar sesión primero');
 
-      final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/${path.basename(filePath)}');
-      await tempFile.writeAsBytes(response);
+      final extension =
+          path.extension(_selectedFile!.name!).replaceAll('.', '');
+      final fileName = _fileNameController.text.trim().isEmpty
+          ? _selectedFile!.name!
+          : '${_fileNameController.text}.$extension';
 
-      await OpenFile.open(tempFile.path);
+      final mimeType =
+          lookupMimeType(_selectedFile!.name!) ?? 'application/octet-stream';
+      final userFolder =
+          user.email?.split('@').first ?? 'user_${user.id.substring(0, 6)}';
+      final typeFolder = _getTypeFolder(extension);
+      final storagePath = 'usuarios/$userFolder/$typeFolder/$fileName';
+
+      final fileBytes = await File(_selectedFile!.path!).readAsBytes();
+
+      await _supabase.storage.from('useruploads').uploadBinary(
+            storagePath,
+            fileBytes,
+            fileOptions: FileOptions(contentType: mimeType, upsert: true),
+          );
+
+      _showSuccessSnackbar('Archivo subido exitosamente');
+      _resetFileSelection();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al abrir el archivo: ${e.toString()}'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showErrorSnackbar('Error al subir archivo: ${e.toString()}');
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  void _resetFileSelection() {
+    setState(() {
+      _selectedFile = null;
+      _fileNameController.clear();
+    });
+  }
+
+  String _getTypeFolder(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'txt':
+      case 'doc':
+      case 'docx':
+        return 'documentos';
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return 'imagenes';
+      case 'pdf':
+        return 'pdfs';
+      case 'xls':
+      case 'xlsx':
+        return 'hojas_calculo';
+      case 'ppt':
+      case 'pptx':
+        return 'presentaciones';
+      default:
+        return 'otros';
     }
   }
 
   void _navigateToTextEditor() {
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TextEditorScreen(),
-      ),
-    );
+        context, MaterialPageRoute(builder: (_) => TextEditorScreen()));
   }
 
   Future<void> _logout() async {
@@ -148,124 +188,107 @@ class _UploadScreenState extends State<UploadScreen> {
     );
   }
 
-  Widget _buildCurrentScreen() {
-    final isWideScreen = MediaQuery.of(context).size.width > 600;
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  Widget _buildCurrentScreen() {
     switch (_selectedIndex) {
       case 0:
-        return Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 600),
-            child: Card(
-              margin: EdgeInsets.all(16),
-              elevation: 4,
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_isUploading) ...[
-                      CircularProgressIndicator(
-                        value: _uploadProgress / 100,
-                        strokeWidth: 6,
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        'Subiendo archivo...',
-                        style: Theme.of(context).textTheme.titleLarge, // Cambiado de headline6
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        '${_uploadProgress.toStringAsFixed(1)}% completado',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ] else ...[
-                      Icon(
-                        Icons.cloud_upload,
-                        size: 64,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        'Subir Archivo',
-                        style: Theme.of(context).textTheme.headlineSmall, // Cambiado de headline5
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        'Selecciona un archivo para subir a tu almacenamiento',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      SizedBox(height: 32),
-                      ElevatedButton.icon(
-                        onPressed: _uploadFile,
-                        icon: Icon(Icons.upload_file),
-                        label: Text('SELECCIONAR ARCHIVO'),
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
+        return _buildUploadScreen();
       case 1:
-        return Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 600),
-            child: Card(
-              margin: EdgeInsets.all(16),
-              elevation: 4,
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.note_add,
-                      size: 64,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    SizedBox(height: 24),
-                    Text(
-                      'Crear Nuevo Documento',
-                      style: Theme.of(context).textTheme.headlineSmall, // Cambiado de headline5
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Crea y edita documentos de texto directamente en la app',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    SizedBox(height: 32),
-                    ElevatedButton.icon(
-                      onPressed: _navigateToTextEditor,
-                      icon: Icon(Icons.edit),
-                      label: Text('CREAR DOCUMENTO'),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
+        return _buildTextEditorScreen();
       case 2:
-        return MyFilesScreen(onFileTap: _downloadAndOpenFile);
+        return MyFilesScreen();
       default:
         return Center(child: Text('Pantalla no implementada'));
     }
+  }
+
+  Widget _buildUploadScreen() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _selectedFile != null ? Icons.file_present : Icons.cloud_upload,
+            size: 64,
+            color: Theme.of(context).primaryColor,
+          ),
+          SizedBox(height: 24),
+          if (_selectedFile != null) ...[
+            Text(
+              'Archivo seleccionado:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              _selectedFile!.name!,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _resetFileSelection,
+                  child: Text('CANCELAR'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[400],
+                  ),
+                ),
+                SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: _uploadFile,
+                  child: Text('SUBIR AHORA'),
+                ),
+              ],
+            ),
+          ] else ...[
+            ElevatedButton(
+              onPressed: _selectFile,
+              child: Text('SELECCIONAR ARCHIVO'),
+            ),
+          ],
+          if (_isUploading) ...[
+            SizedBox(height: 24),
+            CircularProgressIndicator(),
+            SizedBox(height: 8),
+            Text('Subiendo archivo...'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextEditorScreen() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.note_add, size: 64, color: Theme.of(context).primaryColor),
+          SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _navigateToTextEditor,
+            child: Text('CREAR DOCUMENTO'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -274,76 +297,66 @@ class _UploadScreenState extends State<UploadScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _menuOptions[_selectedIndex]['title'],
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: !isWideScreen,
+        title: Text(_menuOptions[_selectedIndex]['title']),
         actions: [
           if (isWideScreen) ...[
-            ..._menuOptions.asMap().entries.map((entry) {
-              final index = entry.key;
-              final option = entry.value;
-              return IconButton(
-                icon: Icon(option['icon']),
-                tooltip: option['title'],
-                onPressed: () => setState(() => _selectedIndex = index),
-              );
-            }).toList(),
-            SizedBox(width: 8),
+            ..._menuOptions.asMap().entries.map((entry) => IconButton(
+                  icon: Icon(entry.value['icon']),
+                  onPressed: () => setState(() => _selectedIndex = entry.key),
+                )),
+            IconButton(icon: Icon(Icons.logout), onPressed: _logout),
           ],
-          IconButton(
-            icon: Icon(Icons.logout),
-            tooltip: 'Cerrar sesión',
-            onPressed: _logout,
+        ],
+      ),
+      drawer: !isWideScreen ? _buildDrawer() : null,
+      body: _buildCurrentScreen(),
+      bottomNavigationBar: !isWideScreen
+          ? BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: (index) => setState(() => _selectedIndex = index),
+              items: _menuOptions
+                  .map((option) => BottomNavigationBarItem(
+                        icon: Icon(option['icon']),
+                        label: option['title'],
+                      ))
+                  .toList(),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        children: [
+          UserAccountsDrawerHeader(
+            accountName: Text(_supabase.auth.currentUser?.email ?? 'Usuario'),
+            accountEmail: Text(''),
+            currentAccountPicture: CircleAvatar(child: Icon(Icons.person)),
+          ),
+          ..._menuOptions.asMap().entries.map((entry) => ListTile(
+                leading: Icon(entry.value['icon']),
+                title: Text(entry.value['title']),
+                selected: _selectedIndex == entry.key,
+                onTap: () {
+                  setState(() => _selectedIndex = entry.key);
+                  Navigator.pop(context);
+                },
+              )),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.logout),
+            title: Text('Cerrar Sesión'),
+            onTap: _logout,
           ),
         ],
       ),
-      drawer: !isWideScreen ? Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            UserAccountsDrawerHeader(
-              accountName: Text(_supabase.auth.currentUser?.email ?? 'Usuario'),
-              accountEmail: null,
-              currentAccountPicture: CircleAvatar(
-                child: Icon(Icons.person),
-              ),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-            ..._menuOptions.asMap().entries.map((entry) {
-              final index = entry.key;
-              final option = entry.value;
-              return ListTile(
-                leading: Icon(option['icon']),
-                title: Text(option['title']),
-                selected: _selectedIndex == index,
-                onTap: () {
-                  setState(() => _selectedIndex = index);
-                  Navigator.pop(context);
-                },
-              );
-            }).toList(),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Cerrar Sesión'),
-              onTap: _logout,
-            ),
-          ],
-        ),
-      ) : null,
-      body: _buildCurrentScreen(),
-      bottomNavigationBar: !isWideScreen ? BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: _menuOptions.map((option) => BottomNavigationBarItem(
-          icon: Icon(option['icon']),
-          label: option['title'],
-        )).toList(),
-      ) : null,
     );
+  }
+
+  @override
+  void dispose() {
+    _fileNameController.dispose();
+    super.dispose();
   }
 }

@@ -45,9 +45,9 @@ com.example.apunco.app-packageDebugResources-43 /home/arcila24/Escritorio/apunco
 com.example.apunco.app-debug-44 /home/arcila24/Escritorio/apunco/build/app/intermediates/merged_res/debug/mergeDebugResources
 com.example.apunco.app-debug-45 /home/arcila24/Escritorio/apunco/build/app_links/intermediates/packaged_res/debug/packageDebugResources
 com.example.apunco.app-debug-46 /home/arcila24/Escritorio/apunco/build/file_picker/intermediates/packaged_res/debug/packageDebugResources
-com.example.apunco.app-debug-47 /home/arcila24/Escritorio/apunco/build/flutter_plugin_android_lifecycle/intermediates/packaged_res/debug/packageDebugResources
-com.example.apunco.app-debug-48 /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/packaged_res/debug/packageDebugResources
-com.example.apunco.app-debug-49 /home/arcila24/Escritorio/apunco/build/path_provider_android/intermediates/packaged_res/debug/packageDebugResources
-com.example.apunco.app-debug-50 /home/arcila24/Escritorio/apunco/build/permission_handler_android/intermediates/packaged_res/debug/packageDebugResources
+com.example.apunco.app-debug-47 /home/arcila24/Escritorio/apunco/build/flutter_keyboard_visibility/intermediates/packaged_res/debug/packageDebugResources
+com.example.apunco.app-debug-48 /home/arcila24/Escritorio/apunco/build/flutter_plugin_android_lifecycle/intermediates/packaged_res/debug/packageDebugResources
+com.example.apunco.app-debug-49 /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/packaged_res/debug/packageDebugResources
+com.example.apunco.app-debug-50 /home/arcila24/Escritorio/apunco/build/path_provider_android/intermediates/packaged_res/debug/packageDebugResources
 com.example.apunco.app-debug-51 /home/arcila24/Escritorio/apunco/build/shared_preferences_android/intermediates/packaged_res/debug/packageDebugResources
 com.example.apunco.app-debug-52 /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/packaged_res/debug/packageDebugResources

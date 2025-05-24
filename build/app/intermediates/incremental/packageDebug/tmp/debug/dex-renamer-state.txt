@@ -1,4 +1,4 @@
-#Sat Apr 19 15:04:29 COT 2025
+#Sat May 24 16:31:40 COT 2025
 base.0=/home/arcila24/Escritorio/apunco/build/app/intermediates/dex/debug/mergeExtDexDebug/classes.dex
 base.1=/home/arcila24/Escritorio/apunco/build/app/intermediates/dex/debug/mergeLibDexDebug/0/classes.dex
 base.2=/home/arcila24/Escritorio/apunco/build/app/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex

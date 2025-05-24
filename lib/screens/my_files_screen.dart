@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'text_editor_screen.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'text_editor_screen.dart'; // Asegúrate de importar el editor de texto
 
 class MyFilesScreen extends StatefulWidget {
-  final Function(String)? onFileTap;
-
-  const MyFilesScreen({Key? key, this.onFileTap}) : super(key: key);
+  const MyFilesScreen({Key? key}) : super(key: key);
 
   @override
   _MyFilesScreenState createState() => _MyFilesScreenState();
@@ -16,7 +17,7 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
   List<Map<String, dynamic>> _files = [];
   bool _isLoading = true;
   String? _errorMessage;
-  final List<String> _editableExtensions = ['txt', 'doc', 'docx'];
+  bool _isOpeningFile = false;
 
   @override
   void initState() {
@@ -34,8 +35,7 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
       final user = _supabase.auth.currentUser;
       if (user == null) throw Exception('Usuario no autenticado');
 
-      final userFolder = 
-          user.email?.split('@').first ?? 'user_${user.id.substring(0, 6)}';
+      final userFolder = user.email?.split('@').first ?? 'user_${user.id.substring(0, 6)}';
       final basePath = 'usuarios/$userFolder/';
 
       final foldersResponse = await _supabase.storage
@@ -54,17 +54,13 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
           for (var file in filesResponse) {
             if (file.id != null) {
               final fileName = file.name;
-              final fileExt = fileName.contains('.') 
-                  ? fileName.split('.').last.toLowerCase()
-                  : 'unknown';
-                  
+              final fileExt = fileName.split('.').last.toLowerCase();
+              
               allFiles.add({
                 'name': fileName,
                 'fullPath': '$basePath${folder.name}/$fileName',
-                'displayPath': '${folder.name}/$fileName',
                 'type': fileExt,
                 'folder': folder.name,
-                'isEditable': _editableExtensions.contains(fileExt),
               });
             }
           }
@@ -88,103 +84,109 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
   Future<void> _deleteFile(String fullPath) async {
     try {
       await _supabase.storage.from('useruploads').remove([fullPath]);
+      await _fetchFiles();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Archivo eliminado correctamente'),
-          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
         ),
       );
-      await _fetchFiles();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al eliminar: ${e.toString()}'),
-          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
         ),
       );
     }
   }
 
-  void _showFileActions(BuildContext context, Map<String, dynamic> file) {
-    final isEditable = file['isEditable'] ?? false;
-
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
+  Future<void> _openFileWithExternalApp(Map<String, dynamic> file) async {
+    if (_isOpeningFile) return;
+    
+    setState(() => _isOpeningFile = true);
+    
+    try {
+      // Mostrar indicador de progreso
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  file['name'],
-                  style: Theme.of(context).textTheme.titleLarge,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Divider(height: 1),
-              ListTile(
-                leading: Icon(Icons.open_in_new, color: Theme.of(context).primaryColor),
-                title: Text('Abrir archivo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _openFile(file);
-                },
-              ),
-              if (isEditable) ListTile(
-                leading: Icon(Icons.edit, color: Theme.of(context).primaryColor),
-                title: Text('Editar contenido'),
-                onTap: () => _editFile(context, file),
-              ),
-              ListTile(
-                leading: Icon(Icons.delete, color: Colors.red),
-                title: Text('Eliminar archivo', style: TextStyle(color: Colors.red)),
-                onTap: () => _confirmDelete(context, file),
-              ),
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text('Preparando archivo...'),
             ],
           ),
+          duration: Duration(minutes: 1),
+        ),
+      );
+
+      // Descargar archivo
+      final response = await _supabase.storage
+          .from('useruploads')
+          .download(file['fullPath']);
+
+      // Crear archivo temporal
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/${file['name']}');
+      await tempFile.writeAsBytes(response);
+
+      // Cerrar el SnackBar de progreso
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      // Abrir con aplicación externa
+      final result = await OpenFilex.open(tempFile.path);
+
+      // Manejar resultado
+      if (result.type != ResultType.done) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No se pudo abrir el archivo: ${result.message}'),
+            duration: Duration(seconds: 3),
+          ),
         );
-      },
-    );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al abrir archivo: ${e.toString()}'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      setState(() => _isOpeningFile = false);
+    }
   }
 
-  Future<void> _openFile(Map<String, dynamic> file) async {
-    // Aquí puedes implementar la lógica para abrir el archivo directamente
-    // sin descargarlo localmente si es posible
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Función de abrir archivo en desarrollo'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  Future<void> _editFile(BuildContext context, Map<String, dynamic> file) async {
+  Future<void> _editTextFile(Map<String, dynamic> file) async {
     try {
+      // Descargar el contenido del archivo
       final response = await _supabase.storage
           .from('useruploads')
           .download(file['fullPath']);
       
-      final content = String.fromCharCodes(response);
-      Navigator.pop(context);
+      final fileContent = String.fromCharCodes(response);
       
-      Navigator.push(
+      // Navegar a la pantalla de edición
+      await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => TextEditorScreen(
-            initialText: content,
+            initialText: fileContent,
             filePath: file['fullPath'],
+            fileName: file['name'],
           ),
         ),
       );
+      
+      // Actualizar la lista después de editar
+      await _fetchFiles();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al editar archivo: ${e.toString()}'),
-          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
         ),
       );
     }
@@ -194,22 +196,64 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Confirmar eliminación'),
+        title: const Text('Confirmar eliminación'),
         content: Text('¿Estás seguro de eliminar "${file['name']}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _deleteFile(file['fullPath']);
             },
-            child: Text('Eliminar', style: TextStyle(color: Colors.red)),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
+    );
+  }
+
+  void _showFileOptions(BuildContext context, Map<String, dynamic> file) {
+    final isTextFile = file['type'] == 'txt';
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.open_in_new),
+              title: const Text('Abrir'),
+              onTap: () {
+                Navigator.pop(context);
+                _openFileWithExternalApp(file);
+              },
+            ),
+            if (isTextFile) ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Editar'),
+              onTap: () {
+                Navigator.pop(context);
+                _editTextFile(file);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Eliminar archivo', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _confirmDelete(context, file);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -217,13 +261,13 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mis Archivos', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Mis Archivos'),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
-            tooltip: 'Actualizar',
-            onPressed: _fetchFiles,
+            icon: const Icon(Icons.refresh),
+            onPressed: _isLoading ? null : _fetchFiles,
+            tooltip: 'Actualizar lista',
           ),
         ],
       ),
@@ -233,12 +277,12 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(height: 20),
             Text('Cargando archivos...'),
           ],
         ),
@@ -247,25 +291,25 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
     
     if (_errorMessage != null) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: Colors.red, size: 48),
-              SizedBox(height: 16),
-              Text(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.red, size: 50),
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: Colors.red, fontSize: 16),
               ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _fetchFiles,
-                child: Text('Reintentar'),
-              ),
-            ],
-          ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _fetchFiles,
+              child: Text('Reintentar'),
+            ),
+          ],
         ),
       );
     }
@@ -275,13 +319,13 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.folder_open, size: 64, color: Colors.grey[400]),
-            SizedBox(height: 16),
+            Icon(Icons.folder_open, size: 60, color: Colors.grey[400]),
+            SizedBox(height: 20),
             Text(
               'No hay archivos disponibles',
               style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 10),
             Text(
               'Sube archivos para verlos aquí',
               style: TextStyle(color: Colors.grey[500]),
@@ -291,32 +335,24 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth > 600;
-        
-        return isWideScreen ? _buildWideLayout() : _buildMobileLayout();
-      },
-    );
-  }
-
-  Widget _buildMobileLayout() {
     return ListView.builder(
-      padding: EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       itemCount: _files.length,
       itemBuilder: (context, index) {
         final file = _files[index];
+        final isTextFile = file['type'] == 'txt';
+        
         return Card(
           elevation: 2,
-          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: () => _showFileActions(context, file),
+            onTap: isTextFile 
+                ? () => _editTextFile(file)
+                : () => _openFileWithExternalApp(file),
+            onLongPress: () => _showFileOptions(context, file),
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
                   _getFileIcon(file['type']),
@@ -344,89 +380,14 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
                       ],
                     ),
                   ),
-                  Icon(Icons.more_vert, color: Colors.grey),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildWideLayout() {
-    return GridView.builder(
-      padding: EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 300,
-        childAspectRatio: 3,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: _files.length,
-      itemBuilder: (context, index) {
-        final file = _files[index];
-        return Card(
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => _showFileActions(context, file),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: _getFileIcon(file['type']),
+                  if (isTextFile) IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () => _editTextFile(file),
+                    tooltip: 'Editar archivo',
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          file['name'],
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          '${file['type'].toUpperCase()} • ${file['folder']}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuButton(
+                  IconButton(
                     icon: Icon(Icons.more_vert),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        child: Text('Abrir'),
-                        onTap: () => _openFile(file),
-                      ),
-                      if (file['isEditable'] ?? false) PopupMenuItem(
-                        child: Text('Editar'),
-                        onTap: () => _editFile(context, file),
-                      ),
-                      PopupMenuItem(
-                        child: Text('Eliminar', style: TextStyle(color: Colors.red)),
-                        onTap: () => _confirmDelete(context, file),
-                      ),
-                    ],
+                    onPressed: () => _showFileOptions(context, file),
                   ),
                 ],
               ),
@@ -438,18 +399,22 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
   }
 
   Widget _getFileIcon(String fileType) {
-    final iconSize = 24.0;
-    final color = Theme.of(context).primaryColor;
-    
+    final iconSize = 28.0;
     switch (fileType) {
       case 'txt': return Icon(Icons.text_snippet, size: iconSize, color: Colors.blue);
-      case 'doc':
+      case 'doc': 
       case 'docx': return Icon(Icons.description, size: iconSize, color: Colors.blue);
       case 'pdf': return Icon(Icons.picture_as_pdf, size: iconSize, color: Colors.red);
       case 'jpg':
       case 'jpeg':
       case 'png': return Icon(Icons.image, size: iconSize, color: Colors.green);
-      default: return Icon(Icons.insert_drive_file, size: iconSize, color: color);
+      case 'xls':
+      case 'xlsx': return Icon(Icons.table_chart, size: iconSize, color: Colors.green);
+      case 'ppt':
+      case 'pptx': return Icon(Icons.slideshow, size: iconSize, color: Colors.orange);
+      case 'zip':
+      case 'rar': return Icon(Icons.archive, size: iconSize, color: Colors.grey);
+      default: return Icon(Icons.insert_drive_file, size: iconSize);
     }
   }
 }

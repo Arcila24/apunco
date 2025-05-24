@@ -4,8 +4,8 @@ INJECTED from /home/arcila24/Escritorio/apunco/android/app/src/main/AndroidManif
 INJECTED from /home/arcila24/Escritorio/apunco/android/app/src/debug/AndroidManifest.xml
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-12:19
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:7:5-12:19
-MERGED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-20:19
-MERGED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-20:19
+MERGED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:5-26:19
+MERGED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:5-26:19
 MERGED from [androidx.emoji2:emoji2:1.2.0] /home/arcila24/.gradle/caches/8.10.2/transforms/d221757f531c672c2df2db4ebaa2cbf1/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:23:5-33:19
 MERGED from [androidx.emoji2:emoji2:1.2.0] /home/arcila24/.gradle/caches/8.10.2/transforms/d221757f531c672c2df2db4ebaa2cbf1/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:23:5-33:19
 MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /home/arcila24/.gradle/caches/8.10.2/transforms/9a58102024d2bac5d1ee1e1203812678/transformed/jetified-lifecycle-process-2.8.7/AndroidManifest.xml:23:5-33:19
@@ -36,8 +36,9 @@ MERGED from [:file_picker] /home/arcila24/Escritorio/apunco/build/file_picker/in
 MERGED from [:shared_preferences_android] /home/arcila24/Escritorio/apunco/build/shared_preferences_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-14:12
 MERGED from [:app_links] /home/arcila24/Escritorio/apunco/build/app_links/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:flutter_keyboard_visibility] /home/arcila24/Escritorio/apunco/build/flutter_keyboard_visibility/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [:flutter_plugin_android_lifecycle] /home/arcila24/Escritorio/apunco/build/flutter_plugin_android_lifecycle/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
-MERGED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-22:12
+MERGED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-28:12
 MERGED from [:path_provider_android] /home/arcila24/Escritorio/apunco/build/path_provider_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.preference:preference:1.2.1] /home/arcila24/.gradle/caches/8.10.2/transforms/0098a6e93522fecc805d8900172003dc/transformed/preference-1.2.1/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/arcila24/.gradle/caches/8.10.2/transforms/a12a090674da1baef97900c09c2e9654/transformed/jetified-appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
@@ -106,6 +107,10 @@ MERGED from [com.getkeepsafe.relinker:relinker:1.4.5] /home/arcila24/.gradle/cac
 		ADDED from /home/arcila24/Escritorio/apunco/android/app/src/main/AndroidManifest.xml:1:11-69
 uses-permission#android.permission.READ_EXTERNAL_STORAGE
 ADDED from /home/arcila24/Escritorio/apunco/android/app/src/main/AndroidManifest.xml:2:1-75
+MERGED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-10:38
+MERGED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-10:38
+	android:maxSdkVersion
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:9-35
 	android:name
 		ADDED from /home/arcila24/Escritorio/apunco/android/app/src/main/AndroidManifest.xml:2:18-73
 uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
@@ -142,10 +147,12 @@ MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_l
 MERGED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:app_links] /home/arcila24/Escritorio/apunco/build/app_links/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:app_links] /home/arcila24/Escritorio/apunco/build/app_links/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:flutter_keyboard_visibility] /home/arcila24/Escritorio/apunco/build/flutter_keyboard_visibility/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:flutter_keyboard_visibility] /home/arcila24/Escritorio/apunco/build/flutter_keyboard_visibility/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:flutter_plugin_android_lifecycle] /home/arcila24/Escritorio/apunco/build/flutter_plugin_android_lifecycle/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:flutter_plugin_android_lifecycle] /home/arcila24/Escritorio/apunco/build/flutter_plugin_android_lifecycle/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
-MERGED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
-MERGED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
+MERGED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
+MERGED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
 MERGED from [:path_provider_android] /home/arcila24/Escritorio/apunco/build/path_provider_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:path_provider_android] /home/arcila24/Escritorio/apunco/build/path_provider_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [androidx.preference:preference:1.2.1] /home/arcila24/.gradle/caches/8.10.2/transforms/0098a6e93522fecc805d8900172003dc/transformed/preference-1.2.1/AndroidManifest.xml:20:5-22:41
@@ -280,26 +287,36 @@ ADDED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_la
 		ADDED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-71
 	android:name
 		ADDED from [:url_launcher_android] /home/arcila24/Escritorio/apunco/build/url_launcher_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:13-74
+uses-permission#android.permission.READ_MEDIA_IMAGES
+ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:5-76
+	android:name
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:22-73
+uses-permission#android.permission.READ_MEDIA_VIDEO
+ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:5-75
+	android:name
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:22-72
+uses-permission#android.permission.READ_MEDIA_AUDIO
+ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:5-75
+	android:name
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:22-72
 provider#com.crazecoder.openfile.FileProvider
-ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:9-19:20
-	android:requestLegacyExternalStorage
-		ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:13-56
+ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:16:9-25:20
 	android:grantUriPermissions
-		ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-47
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:20:13-47
 	android:authorities
-		ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-88
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:18:13-88
 	android:exported
-		ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:13-37
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:19:13-37
 	tools:replace
-		ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:13-48
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:13-48
 	android:name
-		ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:13-64
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:17:13-64
 meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:16:13-18:53
+ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:22:13-24:53
 	android:resource
-		ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:18:17-50
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:24:17-50
 	android:name
-		ADDED from [:open_file_android] /home/arcila24/Escritorio/apunco/build/open_file_android/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:17:17-67
+		ADDED from [:open_filex] /home/arcila24/Escritorio/apunco/build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:23:17-67
 provider#androidx.startup.InitializationProvider
 ADDED from [androidx.emoji2:emoji2:1.2.0] /home/arcila24/.gradle/caches/8.10.2/transforms/d221757f531c672c2df2db4ebaa2cbf1/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
 MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /home/arcila24/.gradle/caches/8.10.2/transforms/9a58102024d2bac5d1ee1e1203812678/transformed/jetified-lifecycle-process-2.8.7/AndroidManifest.xml:24:9-32:20

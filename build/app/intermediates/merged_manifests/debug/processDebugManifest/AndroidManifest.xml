@@ -13,7 +13,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!--
  Required to query activities that can process text, see:
@@ -34,6 +36,10 @@
             <data android:mimeType="*/*" />
         </intent>
     </queries>
+
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <permission
         android:name="com.example.apunco.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
@@ -91,8 +97,7 @@
             android:name="com.crazecoder.openfile.FileProvider"
             android:authorities="com.example.apunco.fileProvider.com.crazecoder.openfile"
             android:exported="false"
-            android:grantUriPermissions="true"
-            android:requestLegacyExternalStorage="true" >
+            android:grantUriPermissions="true" >
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/filepaths" />
