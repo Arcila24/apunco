@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import 'login_screen.dart';
 import 'text_editor_screen.dart';
 import 'my_files_screen.dart';
+import 'explore_screen.dart';
 
 class UploadScreen extends StatefulWidget {
   @override
@@ -24,6 +25,7 @@ class _UploadScreenState extends State<UploadScreen> {
     {'icon': Icons.cloud_upload, 'title': 'Subir Archivo'},
     {'icon': Icons.note_add, 'title': 'Crear Texto'},
     {'icon': Icons.folder, 'title': 'Mis Archivos'},
+    {'icon': Icons.explore, 'title': 'Explorar'},
   ];
 
   Future<void> _selectFile() async {
@@ -214,6 +216,8 @@ class _UploadScreenState extends State<UploadScreen> {
         return _buildTextEditorScreen();
       case 2:
         return MyFilesScreen();
+      case 3:
+        return ExploreScreen(); // Nueva pantalla
       default:
         return Center(child: Text('Pantalla no implementada'));
     }
