@@ -21,6 +21,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   bool _isOpeningFile = false;
   bool _isSharingFile = false;
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
+
+  Map<String, List<Map<String, dynamic>>> _commentsMap = {};
+  Map<String, int> _commentsCountMap = {};
 
   @override
   void initState() {
@@ -32,6 +36,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 
@@ -42,10 +47,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
         _errorMessage = null;
       });
 
+      // Obtener conteo de comentarios para todos los archivos
+      final commentsCountResponse = await _supabase
+          .from('file_comments_count')
+          .select('file_path, count');
+
+      if (commentsCountResponse != null) {
+        for (var item in commentsCountResponse) {
+          _commentsCountMap[item['file_path']] = item['count'];
+        }
+      }
+
       // Listar todos los usuarios
-      final usersResponse = await _supabase.storage
-          .from('useruploads')
-          .list(path: 'usuarios/');
+      final usersResponse =
+          await _supabase.storage.from('useruploads').list(path: 'usuarios/');
 
       final userFolders = usersResponse.where((f) => f.id == null).toList();
       List<Map<String, dynamic>> allFiles = [];
@@ -57,26 +72,31 @@ class _ExploreScreenState extends State<ExploreScreen> {
               .from('useruploads')
               .list(path: 'usuarios/${userFolder.name}/');
 
-          final typeFolders = typeFoldersResponse.where((f) => f.id == null).toList();
+          final typeFolders =
+              typeFoldersResponse.where((f) => f.id == null).toList();
 
           for (var typeFolder in typeFolders) {
             try {
               // Listar todos los archivos de cada carpeta de tipo
               final filesResponse = await _supabase.storage
                   .from('useruploads')
-                  .list(path: 'usuarios/${userFolder.name}/${typeFolder.name}/');
+                  .list(
+                      path: 'usuarios/${userFolder.name}/${typeFolder.name}/');
 
               for (var file in filesResponse) {
                 if (file.id != null) {
                   final fileName = file.name;
                   final fileExt = fileName.split('.').last.toLowerCase();
-                  
+                  final fullPath =
+                      'usuarios/${userFolder.name}/${typeFolder.name}/$fileName';
+
                   allFiles.add({
                     'name': fileName,
-                    'fullPath': 'usuarios/${userFolder.name}/${typeFolder.name}/$fileName',
+                    'fullPath': fullPath,
                     'type': fileExt,
                     'folder': typeFolder.name,
                     'user': userFolder.name,
+                    'commentsCount': _commentsCountMap[fullPath] ?? 0,
                   });
                 }
               }
@@ -85,7 +105,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
             }
           }
         } catch (e) {
-          debugPrint('Error al listar carpetas de usuario ${userFolder.name}: $e');
+          debugPrint(
+              'Error al listar carpetas de usuario ${userFolder.name}: $e');
         }
       }
 
@@ -102,22 +123,191 @@ class _ExploreScreenState extends State<ExploreScreen> {
     }
   }
 
+  Future<void> _fetchCommentsForFile(String filePath) async {
+    try {
+      final response = await _supabase
+          .from('file_comments')
+          .select('*')
+          .eq('file_path', filePath)
+          .order('created_at', ascending: false);
+
+      if (response != null) {
+        setState(() {
+          _commentsMap[filePath] = (response).cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error al cargar comentarios: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar comentarios')),
+      );
+    }
+  }
+
+  Future<void> _addComment(String filePath) async {
+    if (_commentController.text.trim().isEmpty) return;
+
+    final user = _supabase.auth.currentUser;
+    if (user == null || user.email == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Debes iniciar sesión para comentar')),
+      );
+      return;
+    }
+
+    try {
+      await _supabase.from('file_comments').insert({
+        'file_path': filePath,
+        'user_email': user.email,
+        'comment': _commentController.text.trim(),
+      });
+
+      await _supabase.rpc('increment_comment_count', params: {
+        'input_file_path': filePath // Nuevo nombre del parámetro
+      });
+      // Actualizar lista de comentarios
+      await _fetchCommentsForFile(filePath);
+
+      // Actualizar contador en la lista de archivos
+      setState(() {
+        final fileIndex =
+            _allFiles.indexWhere((f) => f['fullPath'] == filePath);
+        if (fileIndex != -1) {
+          _allFiles[fileIndex]['commentsCount'] =
+              (_allFiles[fileIndex]['commentsCount'] ?? 0) + 1;
+        }
+
+        final filteredIndex =
+            _filteredFiles.indexWhere((f) => f['fullPath'] == filePath);
+        if (filteredIndex != -1) {
+          _filteredFiles[filteredIndex]['commentsCount'] =
+              (_filteredFiles[filteredIndex]['commentsCount'] ?? 0) + 1;
+        }
+      });
+
+      _commentController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al agregar comentario: ${e.toString()}')),
+      );
+    }
+  }
+
+  void _showCommentsDialog(BuildContext context, Map<String, dynamic> file) {
+    final filePath = file['fullPath'];
+
+    // Cargar comentarios si no están en caché
+    if (!_commentsMap.containsKey(filePath)) {
+      _fetchCommentsForFile(filePath);
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Comentarios: ${file['name']}'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Lista de comentarios
+                Expanded(
+                  child: _commentsMap[filePath] == null
+                      ? Center(child: CircularProgressIndicator())
+                      : _commentsMap[filePath]!.isEmpty
+                          ? Center(child: Text('No hay comentarios aún'))
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: _commentsMap[filePath]!.length,
+                              itemBuilder: (context, index) {
+                                final comment = _commentsMap[filePath]![index];
+                                return Card(
+                                  margin: EdgeInsets.symmetric(vertical: 4),
+                                  child: ListTile(
+                                    title: Text(comment['comment']),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          comment['user_email'],
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        Text(
+                                          _formatDate(comment['created_at']),
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                    leading: Icon(Icons.account_circle),
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+                Divider(),
+                // Campo para nuevo comentario
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _commentController,
+                        decoration: InputDecoration(
+                          hintText: 'Escribe un comentario...',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                        ),
+                        maxLines: 2,
+                        minLines: 1,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.send, color: Colors.blue),
+                      onPressed: () => _addComment(filePath),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString).toLocal();
+      return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateString;
+    }
+  }
+
   void _filterFiles() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       _filteredFiles = _allFiles.where((file) {
         return file['name'].toLowerCase().contains(query) ||
-               file['user'].toLowerCase().contains(query) ||
-               file['type'].toLowerCase().contains(query);
+            file['user'].toLowerCase().contains(query) ||
+            file['type'].toLowerCase().contains(query);
       }).toList();
     });
   }
 
   Future<void> _openFileWithExternalApp(Map<String, dynamic> file) async {
     if (_isOpeningFile) return;
-    
+
     setState(() => _isOpeningFile = true);
-    
+
     try {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -167,9 +357,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   Future<void> _shareFile(Map<String, dynamic> file) async {
     if (_isSharingFile) return;
-    
+
     setState(() => _isSharingFile = true);
-    
+
     try {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -191,7 +381,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
         text: 'Te comparto este archivo: ${file['name']}',
         subject: 'Compartiendo archivo',
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -230,6 +419,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 _shareFile(file);
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.comment),
+              title: const Text('Ver comentarios'),
+              onTap: () {
+                Navigator.pop(context);
+                _showCommentsDialog(context, file);
+              },
+            ),
           ],
         );
       },
@@ -239,20 +436,28 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget _getFileIcon(String fileType) {
     final iconSize = 28.0;
     switch (fileType) {
-      case 'txt': return Icon(Icons.text_snippet, size: iconSize, color: Colors.blue);
-      case 'doc': 
-      case 'docx': return Icon(Icons.description, size: iconSize, color: Colors.blue);
-      case 'pdf': return Icon(Icons.picture_as_pdf, size: iconSize, color: Colors.red);
+      case 'txt':
+        return Icon(Icons.text_snippet, size: iconSize, color: Colors.blue);
+      case 'doc':
+      case 'docx':
+        return Icon(Icons.description, size: iconSize, color: Colors.blue);
+      case 'pdf':
+        return Icon(Icons.picture_as_pdf, size: iconSize, color: Colors.red);
       case 'jpg':
       case 'jpeg':
-      case 'png': return Icon(Icons.image, size: iconSize, color: Colors.green);
+      case 'png':
+        return Icon(Icons.image, size: iconSize, color: Colors.green);
       case 'xls':
-      case 'xlsx': return Icon(Icons.table_chart, size: iconSize, color: Colors.green);
+      case 'xlsx':
+        return Icon(Icons.table_chart, size: iconSize, color: Colors.green);
       case 'ppt':
-      case 'pptx': return Icon(Icons.slideshow, size: iconSize, color: Colors.orange);
+      case 'pptx':
+        return Icon(Icons.slideshow, size: iconSize, color: Colors.orange);
       case 'zip':
-      case 'rar': return Icon(Icons.archive, size: iconSize, color: Colors.grey);
-      default: return Icon(Icons.insert_drive_file, size: iconSize);
+      case 'rar':
+        return Icon(Icons.archive, size: iconSize, color: Colors.grey);
+      default:
+        return Icon(Icons.insert_drive_file, size: iconSize);
     }
   }
 
@@ -305,7 +510,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ),
       );
     }
-    
+
     if (_errorMessage != null) {
       return Center(
         child: Column(
@@ -330,7 +535,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ),
       );
     }
-    
+
     if (_filteredFiles.isEmpty) {
       return Center(
         child: Column(
@@ -364,7 +569,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
       itemCount: _filteredFiles.length,
       itemBuilder: (context, index) {
         final file = _filteredFiles[index];
-        
+        final commentsCount = file['commentsCount'] ?? 0;
+
         return Card(
           elevation: 2,
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -401,9 +607,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ],
                     ),
                   ),
+                  // Botón de comentarios con contador
                   IconButton(
-                    icon: Icon(Icons.more_vert),
-                    onPressed: () => _showFileOptions(context, file),
+                    icon: Badge(
+                      label: Text(commentsCount.toString()),
+                      isLabelVisible: commentsCount > 0,
+                      child: Icon(Icons.comment_outlined),
+                    ),
+                    onPressed: () => _showCommentsDialog(context, file),
                   ),
                 ],
               ),
