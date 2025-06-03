@@ -265,6 +265,7 @@ com.example.apunco:string/abc_activity_chooser_view_see_all = 0x7f0d0004
 com.example.apunco:string/abc_action_bar_up_description = 0x7f0d0001
 com.example.apunco:style/Widget.AppCompat.Spinner.DropDown.ActionBar = 0x7f0e0178
 com.example.apunco:string/abc_action_bar_home_description = 0x7f0d0000
+com.example.apunco:mipmap/launcher_icon = 0x7f0c0001
 com.example.apunco:style/Platform.V25.AppCompat = 0x7f0e00ab
 com.example.apunco:layout/select_dialog_multichoice_material = 0x7f0b003a
 com.example.apunco:style/TextAppearance.Compat.Notification.Title = 0x7f0e0112

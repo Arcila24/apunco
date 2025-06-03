@@ -1,26 +1,46 @@
 [
     {
-        "merged": "com.example.apunco.app-debug-44:/mipmap-mdpi_ic_launcher.png.flat",
-        "source": "com.example.apunco.app-main-39:/mipmap-mdpi/ic_launcher.png"
+        "merged": "com.example.apunco.app-debug-44:/mipmap-xxhdpi_launcher_icon.png.flat",
+        "source": "com.example.apunco.app-main-39:/mipmap-xxhdpi/launcher_icon.png"
     },
     {
-        "merged": "com.example.apunco.app-debug-44:/drawable-v21_launch_background.xml.flat",
-        "source": "com.example.apunco.app-main-39:/drawable-v21/launch_background.xml"
+        "merged": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-debug-44:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-main-39:/mipmap-xxhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.example.apunco.app-debug-44:/mipmap-xhdpi_ic_launcher.png.flat",
-        "source": "com.example.apunco.app-main-39:/mipmap-xhdpi/ic_launcher.png"
+        "merged": "com.example.apunco.app-debug-44:/mipmap-hdpi_launcher_icon.png.flat",
+        "source": "com.example.apunco.app-main-39:/mipmap-hdpi/launcher_icon.png"
     },
     {
-        "merged": "com.example.apunco.app-debug-44:/mipmap-xxxhdpi_ic_launcher.png.flat",
-        "source": "com.example.apunco.app-main-39:/mipmap-xxxhdpi/ic_launcher.png"
+        "merged": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-debug-44:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-main-39:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.example.apunco.app-debug-44:/mipmap-xxhdpi_ic_launcher.png.flat",
-        "source": "com.example.apunco.app-main-39:/mipmap-xxhdpi/ic_launcher.png"
+        "merged": "com.example.apunco.app-debug-44:/mipmap-xxxhdpi_launcher_icon.png.flat",
+        "source": "com.example.apunco.app-main-39:/mipmap-xxxhdpi/launcher_icon.png"
     },
     {
-        "merged": "com.example.apunco.app-debug-44:/mipmap-hdpi_ic_launcher.png.flat",
-        "source": "com.example.apunco.app-main-39:/mipmap-hdpi/ic_launcher.png"
+        "merged": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-debug-44:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-main-39:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-debug-44:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-main-39:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.apunco.app-debug-44:/mipmap-xhdpi_launcher_icon.png.flat",
+        "source": "com.example.apunco.app-main-39:/mipmap-xhdpi/launcher_icon.png"
+    },
+    {
+        "merged": "com.example.apunco.app-debug-44:/mipmap-mdpi_launcher_icon.png.flat",
+        "source": "com.example.apunco.app-main-39:/mipmap-mdpi/launcher_icon.png"
+    },
+    {
+        "merged": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-debug-44:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-main-39:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-debug-44:/drawable-v21_launch_background.xml.flat",
+        "source": "/home/arcila24/.gradle/daemon/8.10.2/com.example.apunco.app-main-39:/drawable-v21/launch_background.xml"
     }
 ]

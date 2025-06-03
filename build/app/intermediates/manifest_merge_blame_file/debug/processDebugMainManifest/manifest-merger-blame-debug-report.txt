@@ -82,7 +82,7 @@
 52-->[androidx.core:core:1.15.0] /home/arcila24/.gradle/caches/8.10.2/transforms/0a69220afb472c7b014f0ae28962f998/transformed/core-1.15.0/AndroidManifest.xml:28:18-86
 53        android:debuggable="true"
 54        android:extractNativeLibs="true"
-55        android:icon="@mipmap/ic_launcher"
+55        android:icon="@mipmap/launcher_icon"
 56        android:label="apunco" >
 57        <activity
 58            android:name="com.example.apunco.MainActivity"
