@@ -32,6 +32,7 @@ class _UploadScreenState extends State<UploadScreen> {
     try {
       final result = await FilePicker.platform.pickFiles(
         allowMultiple: false,
+        withData: true,
         type: FileType.custom,
         allowedExtensions: [
           'jpg',
@@ -129,7 +130,8 @@ class _UploadScreenState extends State<UploadScreen> {
       final typeFolder = _getTypeFolder(extension);
       final storagePath = 'usuarios/$userFolder/$typeFolder/$fileName';
 
-      final fileBytes = await File(_selectedFile!.path!).readAsBytes();
+      final fileBytes = _selectedFile!.bytes ??
+          await File(_selectedFile!.path!).readAsBytes();
 
       await _supabase.storage.from('useruploads').uploadBinary(
             storagePath,
