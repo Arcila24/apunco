@@ -9,9 +9,10 @@ import 'text_editor_screen.dart';
 import 'my_files_screen.dart';
 import 'explore_screen.dart';
 import 'user_screen.dart'; // Nuevo
+import 'qr_scanner_screen.dart';
 
 class UploadScreen extends StatefulWidget {
-  const UploadScreen({Key? key}) : super(key: key);
+  const UploadScreen({super.key});
 
   @override
   _UploadScreenState createState() => _UploadScreenState();
@@ -35,6 +36,7 @@ class _UploadScreenState extends State<UploadScreen> {
     {'icon': Icons.note_add, 'title': 'Crear Texto'},
     {'icon': Icons.folder, 'title': 'Mis Archivos'},
     {'icon': Icons.explore, 'title': 'Explorar'},
+    {'icon': Icons.qr_code, 'title': 'Escanear QR 3D'}, 
   ];
 
   // Menú para admins
@@ -209,6 +211,7 @@ class _UploadScreenState extends State<UploadScreen> {
         case 1: return _buildTextEditorScreen();
         case 2: return const MyFilesScreen();
         case 3: return const ExploreScreen();
+        case 4: return const QRScannerScreen();
         default: return _buildUploadScreen();
       }
     }
