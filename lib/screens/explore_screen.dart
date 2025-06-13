@@ -4,6 +4,8 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({Key? key}) : super(key: key);
@@ -304,24 +306,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Future<void> _openFileWithExternalApp(Map<String, dynamic> file) async {
-    if (_isOpeningFile) return;
+  if (_isOpeningFile) return;
 
-    setState(() => _isOpeningFile = true);
+  setState(() => _isOpeningFile = true);
 
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text('Preparando archivo...'),
-            ],
-          ),
-          duration: Duration(minutes: 1),
-        ),
-      );
+  try {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Preparando archivo...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
 
+    if (kIsWeb) {
+      final url = await _supabase.storage
+          .from('useruploads')
+          .createSignedUrl(file['fullPath'], 60 * 5); // 5 min
+      // Abre el archivo en una nueva pestaña
+      await launchUrl(Uri.parse(url));
+    } else {
       final response = await _supabase.storage
           .from('useruploads')
           .download(file['fullPath']);
@@ -329,8 +332,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
       final tempDir = await getTemporaryDirectory();
       final tempFile = File('${tempDir.path}/${file['name']}');
       await tempFile.writeAsBytes(response);
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       final result = await OpenFilex.open(tempFile.path);
 
@@ -342,32 +343,35 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al abrir archivo: ${e.toString()}'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    } finally {
-      setState(() => _isOpeningFile = false);
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al abrir archivo: ${e.toString()}'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  } finally {
+    setState(() => _isOpeningFile = false);
   }
+}
 
-  Future<void> _shareFile(Map<String, dynamic> file) async {
-    if (_isSharingFile) return;
+ Future<void> _shareFile(Map<String, dynamic> file) async {
+  if (_isSharingFile) return;
 
-    setState(() => _isSharingFile = true);
+  setState(() => _isSharingFile = true);
 
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preparando archivo para compartir...'),
-          duration: Duration(seconds: 2),
-        ),
+  try {
+    if (kIsWeb) {
+      final url = await _supabase.storage
+          .from('useruploads')
+          .createSignedUrl(file['fullPath'], 60 * 10); // 10 min
+
+      await Share.share(
+        'Te comparto este archivo: ${file['name']}\n$url',
+        subject: 'Compartiendo archivo',
       );
-
+    } else {
       final response = await _supabase.storage
           .from('useruploads')
           .download(file['fullPath']);
@@ -381,17 +385,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
         text: 'Te comparto este archivo: ${file['name']}',
         subject: 'Compartiendo archivo',
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al compartir archivo: ${e.toString()}'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    } finally {
-      setState(() => _isSharingFile = false);
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al compartir archivo: ${e.toString()}'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  } finally {
+    setState(() => _isSharingFile = false);
   }
+}
 
   void _showFileOptions(BuildContext context, Map<String, dynamic> file) {
     showModalBottomSheet(
