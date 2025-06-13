@@ -42568,7 +42568,7 @@ tH(){var s=0,r=A.z(t.H),q,p=2,o=[],n=this,m,l,k,j
 var $async$tH=A.v(function(a,b){if(a===1){o.push(b)
 s=p}while(true)switch(s){case 0:p=4
 s=7
-return A.r($.aC3.c2().Bi(!1,A.b(["jpg","jpeg","png","pdf","txt","doc","docx","xls","xlsx","ppt","pptx"],t.s),B.nr),$async$tH)
+return A.r($.aC3.c2().Bi(!1,A.b(["jpg","jpeg","png","pdf","txt","doc","docx","xls","xlsx","ppt","pptx"],t.s),B.nr,!0),$async$tH)
 case 7:m=b
 if(m==null||J.fi(m.a)){s=1
 break}n.a1(new A.atR(n,m))
@@ -42605,8 +42605,8 @@ case 4:s=6
 return A.r(p.pN(),$async$tS)
 case 6:case 5:case 1:return A.x(q,r)}})
 return A.y($async$tS,r)},
-pN(){var s=0,r=A.z(t.H),q,p=2,o=[],n=[],m=this,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2
-var $async$pN=A.v(function(a3,a4){if(a3===1){o.push(a4)
+pN(){var s=0,r=A.z(t.H),q,p=2,o=[],n=[],m=this,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3
+var $async$pN=A.v(function(a4,a5){if(a4===1){o.push(a5)
 s=p}while(true)switch(s){case 0:if(m.w==null){s=1
 break}p=4
 m.a1(new A.atV(m))
@@ -42625,23 +42625,28 @@ a0=b==null?null:B.b.gP(b.split("@"))
 h=a0==null?"user_"+B.c.S(l.a,0,6):a0
 g=m.a8r(k)
 f="usuarios/"+A.k(h)+"/"+A.k(g)+"/"+A.k(j)
-b=m.w.a
+b=m.w
+a1=b.c
+s=a1==null?7:8
+break
+case 7:b=b.a
 b.toString
-s=7
+s=9
 return A.r(A.axF(b).vS(),$async$pN)
-case 7:e=a4
+case 9:a1=a5
+case 8:e=a1
 c=c.as
 c===$&&A.a()
-s=8
+s=10
 return A.r(c.fR("useruploads").wa(f,e,new A.tk(!0,i)),$async$pN)
-case 8:m.c.Z(t.J).f.dJ(A.e2(null,null,null,B.cu,null,B.r,null,A.aB("Archivo subido exitosamente",null,null,null,null,null,null),null,B.bk,null,null,null,null,null,null,null,null,null))
+case 10:m.c.Z(t.J).f.dJ(A.e2(null,null,null,B.cu,null,B.r,null,A.aB("Archivo subido exitosamente",null,null,null,null,null,null),null,B.bk,null,null,null,null,null,null,null,null,null))
 m.QL()
 n.push(6)
 s=5
 break
 case 4:p=3
-a2=o.pop()
-d=A.a_(a2)
+a3=o.pop()
+d=A.a_(a3)
 m.Ry("Error al subir archivo: "+J.c4(d))
 n.push(6)
 s=5
@@ -43366,9 +43371,9 @@ r[6]=f+r[6]>>>0
 r[7]=e+r[7]>>>0}}
 A.Wx.prototype={}
 A.a4h.prototype={
-Bi(a,b,c){return this.aq_(!1,b,c)},
-aq_(a,b,c){var s=0,r=A.z(t.fW),q,p=this,o,n,m,l,k,j,i,h,g
-var $async$Bi=A.v(function(d,e){if(d===1)return A.w(e,r)
+Bi(a,b,c,d){return this.aq_(!1,b,c,!0)},
+aq_(a,b,c,d){var s=0,r=A.z(t.fW),q,p=this,o,n,m,l,k,j,i,h,g
+var $async$Bi=A.v(function(e,f){if(e===1)return A.w(f,r)
 while(true)switch(s){case 0:g={}
 if(c!==B.nr)throw A.d(A.d8("You are setting a type ["+c.k(0)+"]. Custom extension filters are only allowed with FileType.custom, please change it or remove filters."))
 o=new A.b6(new A.ah($.ak,t.SP),t.Eq)
@@ -43399,7 +43404,7 @@ for(;i!=null;){m.removeChild(i)
 m=p.a
 i=m.firstChild}s=3
 return A.r(o.a,$async$Bi)
-case 3:h=e
+case 3:h=f
 q=h==null?null:new A.yW(h)
 s=1
 break
