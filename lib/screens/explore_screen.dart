@@ -22,6 +22,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
   String? _errorMessage;
   bool _isOpeningFile = false;
   bool _isSharingFile = false;
+  bool _isAdminUser = false;
+  bool _isCheckingAdmin = false;
+  bool _isDeletingFile = false;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
 
@@ -33,6 +36,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.initState();
     _fetchAllFiles();
     _searchController.addListener(_filterFiles);
+    _checkIfAdmin();
   }
 
   @override
@@ -42,6 +46,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.dispose();
   }
 
+  Future<void> _checkIfAdmin() async {
+    setState(() => _isCheckingAdmin = true);
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    final response = await _supabase
+        .from('user_profiles')
+        .select('role, is_active')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (mounted) {
+      setState(() {
+        _isAdminUser = response != null && response['role'] == 'admin';
+        _isCheckingAdmin = false;
+      });
+    }
+  }
+
   Future<void> _fetchAllFiles() async {
     try {
       setState(() {
@@ -49,18 +72,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
         _errorMessage = null;
       });
 
-      // Obtener conteo de comentarios para todos los archivos
       final commentsCountResponse = await _supabase
           .from('file_comments_count')
           .select('file_path, count');
 
-      if (commentsCountResponse != null) {
-        for (var item in commentsCountResponse) {
-          _commentsCountMap[item['file_path']] = item['count'];
-        }
+      for (var item in commentsCountResponse) {
+        _commentsCountMap[item['file_path']] = item['count'];
       }
 
-      // Listar todos los usuarios
       final usersResponse =
           await _supabase.storage.from('useruploads').list(path: 'usuarios/');
 
@@ -69,7 +88,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
       for (var userFolder in userFolders) {
         try {
-          // Listar todas las carpetas de tipo de cada usuario
           final typeFoldersResponse = await _supabase.storage
               .from('useruploads')
               .list(path: 'usuarios/${userFolder.name}/');
@@ -79,11 +97,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
           for (var typeFolder in typeFolders) {
             try {
-              // Listar todos los archivos de cada carpeta de tipo
               final filesResponse = await _supabase.storage
                   .from('useruploads')
-                  .list(
-                      path: 'usuarios/${userFolder.name}/${typeFolder.name}/');
+                  .list(path: 'usuarios/${userFolder.name}/${typeFolder.name}/');
 
               for (var file in filesResponse) {
                 if (file.id != null) {
@@ -107,8 +123,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             }
           }
         } catch (e) {
-          debugPrint(
-              'Error al listar carpetas de usuario ${userFolder.name}: $e');
+          debugPrint('Error al listar carpetas de usuario ${userFolder.name}: $e');
         }
       }
 
@@ -133,11 +148,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
           .eq('file_path', filePath)
           .order('created_at', ascending: false);
 
-      if (response != null) {
-        setState(() {
-          _commentsMap[filePath] = (response).cast<Map<String, dynamic>>();
-        });
-      }
+      setState(() {
+        _commentsMap[filePath] = (response).cast<Map<String, dynamic>>();
+      });
     } catch (e) {
       debugPrint('Error al cargar comentarios: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -164,10 +177,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
         'comment': _commentController.text.trim(),
       });
 
-      // Actualizar lista de comentarios
       await _fetchCommentsForFile(filePath);
 
-      // Actualizar contador en la lista de archivos
+        // Actualizar contador en la lista de archivos
       // Volver a obtener el conteo actualizado desde Supabase
       final updatedCountResponse = await _supabase
           .from('file_comments_count')
@@ -202,7 +214,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
   void _showCommentsDialog(BuildContext context, Map<String, dynamic> file) {
     final filePath = file['fullPath'];
 
-    // Cargar comentarios si no están en caché
     if (!_commentsMap.containsKey(filePath)) {
       _fetchCommentsForFile(filePath);
     }
@@ -217,7 +228,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Lista de comentarios
                 Expanded(
                   child: _commentsMap[filePath] == null
                       ? Center(child: CircularProgressIndicator())
@@ -254,7 +264,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             ),
                 ),
                 Divider(),
-                // Campo para nuevo comentario
                 Row(
                   children: [
                     Expanded(
@@ -316,17 +325,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
     try {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preparando archivo...'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text('Preparando archivo...'),
+            ],
+          ),
+          duration: Duration(minutes: 1),
         ),
       );
 
       if (kIsWeb) {
         final url = await _supabase.storage
             .from('useruploads')
-            .createSignedUrl(file['fullPath'], 60 * 5); // 5 min
-        // Abre el archivo en una nueva pestaña
+            .createSignedUrl(file['fullPath'], 60 * 5);
         await launchUrl(Uri.parse(url));
       } else {
         final response = await _supabase.storage
@@ -336,6 +350,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
         final tempDir = await getTemporaryDirectory();
         final tempFile = File('${tempDir.path}/${file['name']}');
         await tempFile.writeAsBytes(response);
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         final result = await OpenFilex.open(tempFile.path);
 
@@ -349,6 +365,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         }
       }
     } catch (e) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al abrir archivo: ${e.toString()}'),
@@ -366,10 +383,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
     setState(() => _isSharingFile = true);
 
     try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Preparando archivo para compartir...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
       if (kIsWeb) {
         final url = await _supabase.storage
             .from('useruploads')
-            .createSignedUrl(file['fullPath'], 60 * 10); // 10 min
+            .createSignedUrl(file['fullPath'], 60 * 10);
 
         await Share.share(
           'Te comparto este archivo: ${file['name']}\n$url',
@@ -400,6 +424,88 @@ class _ExploreScreenState extends State<ExploreScreen> {
     } finally {
       setState(() => _isSharingFile = false);
     }
+  }
+
+  Future<void> _deleteFile(String fullPath) async {
+    if (_isDeletingFile || !_isAdminUser) return;
+
+    setState(() => _isDeletingFile = true);
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text('Eliminando archivo...'),
+            ],
+          ),
+          duration: Duration(minutes: 1),
+        ),
+      );
+
+      await _supabase.storage.from('useruploads').remove([fullPath]);
+      await _fetchAllFiles();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Archivo eliminado correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDeletingFile = false);
+      }
+    }
+  }
+
+  void _confirmDelete(BuildContext context, Map<String, dynamic> file) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('¿Estás seguro de eliminar "${file['name']}"?'),
+            const SizedBox(height: 10),
+            Text(
+              'Esta acción no se puede deshacer',
+              style: TextStyle(color: Colors.red[300], fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteFile(file['fullPath']);
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showFileOptions(BuildContext context, Map<String, dynamic> file) {
@@ -436,6 +542,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 _showCommentsDialog(context, file);
               },
             ),
+            if (_isAdminUser)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDelete(context, file);
+                },
+              ),
           ],
         );
       },
@@ -507,6 +622,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _buildBody() {
+    if (_isCheckingAdmin) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     if (_isLoading) {
       return const Center(
         child: Column(
@@ -616,7 +735,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ],
                     ),
                   ),
-                  // Botón de comentarios con contador
                   IconButton(
                     icon: Badge(
                       label: Text(commentsCount.toString()),

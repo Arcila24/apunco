@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'register_screen.dart';
 import 'upload_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -32,11 +35,133 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
 
-      if (response.user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => UploadScreen()),
-        );
+      final user = response.user;
+
+      if (user != null) {
+        final userProfile = await _supabase
+            .from('user_profiles')
+            .select('is_deleted, is_active')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (userProfile != null && userProfile['is_deleted'] == true) {
+          // Cierra sesión y muestra mensaje claro
+          await _supabase.auth.signOut();
+
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  title: Row(
+                    children: const [
+                      Icon(Icons.delete_forever, color: Colors.red, size: 28),
+                      SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          'Cuenta eliminada',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: const Text(
+                    'Tu cuenta ha sido eliminada por un administrador.\n\n'
+                    'Si crees que esto fue un error, por favor comunícate con soporte para más información.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  actions: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.mail_outline),
+                      label: const Text('Contactar soporte'),
+                      onPressed: () {
+                        _contactSupport();
+                      },
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 250, 77, 77),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Entendido'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+
+          return;
+        }
+
+        if (userProfile != null && userProfile['is_active'] == false) {
+          await _supabase.auth.signOut();
+
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  title: Row(
+                    children: const [
+                      Icon(Icons.block, color: Colors.deepOrange, size: 28),
+                      SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          'Cuenta deshabilitada',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: const Text(
+                    'Tu cuenta ha sido deshabilitada por un administrador.\n\n'
+                    'Por favor contacta a soporte para más detalles.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  actions: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.mail_outline),
+                      label: const Text('Contactar soporte'),
+                      onPressed: _contactSupport,
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Entendido'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+
+          return;
+        }
+
+        // ✅ Solo si no está eliminado
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => UploadScreen()),
+          );
+        }
       }
     } catch (e) {
       _showMessage("Usuario o contraseña incorrectos");
@@ -44,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-  
+
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
 
@@ -72,6 +197,38 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void _contactSupport() async {
+    final userEmail = _emailController.text.trim();
+
+    final String subject = 'Soporte - Cuenta deshabilitada o eliminada';
+    final String body =
+        'Hola,\n\nMi cuenta "$userEmail" ha sido deshabilitada o eliminada. ¿Podrían brindarme más información?\n\nGracias.';
+
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'sierraruizdaniela@gmail.com',
+      queryParameters: {
+        'subject': subject,
+        'body': body,
+      },
+    );
+
+    if (!await launchUrl(emailLaunchUri,
+        mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'No se pudo abrir la aplicación de correo.',
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -141,11 +298,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: Icon(Icons.lock),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword 
-                                    ? Icons.visibility 
+                                _obscurePassword
+                                    ? Icons.visibility
                                     : Icons.visibility_off,
                               ),
-                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -202,7 +360,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => RegisterScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) => RegisterScreen()),
                               );
                             },
                             style: OutlinedButton.styleFrom(
