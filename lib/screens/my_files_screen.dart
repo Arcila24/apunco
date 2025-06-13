@@ -5,6 +5,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import 'text_editor_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
+
 
 class MyFilesScreen extends StatefulWidget {
   const MyFilesScreen({Key? key}) : super(key: key);
@@ -104,24 +107,25 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
   }
 
   Future<void> _openFileWithExternalApp(Map<String, dynamic> file) async {
-    if (_isOpeningFile) return;
-    
-    setState(() => _isOpeningFile = true);
-    
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text('Preparando archivo...'),
-            ],
-          ),
-          duration: Duration(minutes: 1),
-        ),
-      );
+  if (_isOpeningFile) return;
 
+  setState(() => _isOpeningFile = true);
+
+  try {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Preparando archivo...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    if (kIsWeb) {
+      final url = await _supabase.storage
+          .from('useruploads')
+          .createSignedUrl(file['fullPath'], 60 * 5); // 5 min
+      // Abre el archivo en una nueva pestaña
+      await launchUrl(Uri.parse(url));
+    } else {
       final response = await _supabase.storage
           .from('useruploads')
           .download(file['fullPath']);
@@ -129,8 +133,6 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
       final tempDir = await getTemporaryDirectory();
       final tempFile = File('${tempDir.path}/${file['name']}');
       await tempFile.writeAsBytes(response);
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       final result = await OpenFilex.open(tempFile.path);
 
@@ -142,32 +144,35 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al abrir archivo: ${e.toString()}'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    } finally {
-      setState(() => _isOpeningFile = false);
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al abrir archivo: ${e.toString()}'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  } finally {
+    setState(() => _isOpeningFile = false);
   }
+}
 
-  Future<void> _shareFile(Map<String, dynamic> file) async {
-    if (_isSharingFile) return;
-    
-    setState(() => _isSharingFile = true);
-    
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preparando archivo para compartir...'),
-          duration: Duration(seconds: 2),
-        ),
+ Future<void> _shareFile(Map<String, dynamic> file) async {
+  if (_isSharingFile) return;
+
+  setState(() => _isSharingFile = true);
+
+  try {
+    if (kIsWeb) {
+      final url = await _supabase.storage
+          .from('useruploads')
+          .createSignedUrl(file['fullPath'], 60 * 10); // 10 min
+
+      await Share.share(
+        'Te comparto este archivo: ${file['name']}\n$url',
+        subject: 'Compartiendo archivo',
       );
-
+    } else {
       final response = await _supabase.storage
           .from('useruploads')
           .download(file['fullPath']);
@@ -181,48 +186,49 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
         text: 'Te comparto este archivo: ${file['name']}',
         subject: 'Compartiendo archivo',
       );
-
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al compartir archivo: ${e.toString()}'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    } finally {
-      setState(() => _isSharingFile = false);
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al compartir archivo: ${e.toString()}'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  } finally {
+    setState(() => _isSharingFile = false);
   }
+}
 
-  Future<void> _editTextFile(Map<String, dynamic> file) async {
-    try {
-      final response = await _supabase.storage
-          .from('useruploads')
-          .download(file['fullPath']);
-      
-      final fileContent = String.fromCharCodes(response);
-      
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TextEditorScreen(
-            initialText: fileContent,
-            filePath: file['fullPath'],
-            fileName: file['name'],
-          ),
+
+ Future<void> _editTextFile(Map<String, dynamic> file) async {
+  try {
+    final response = await _supabase.storage
+        .from('useruploads')
+        .download(file['fullPath']);
+
+    final fileContent = String.fromCharCodes(response);
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TextEditorScreen(
+          initialText: fileContent,
+          filePath: file['fullPath'],
+          fileName: file['name'],
         ),
-      );
-      
-      await _fetchFiles();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al editar archivo: ${e.toString()}'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
+      ),
+    );
+
+    await _fetchFiles();
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al editar archivo: ${e.toString()}'),
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
+}
 
   void _confirmDelete(BuildContext context, Map<String, dynamic> file) {
     showDialog(
