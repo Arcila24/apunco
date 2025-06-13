@@ -23,6 +23,8 @@ dependencies:
   share_plus: ^7.0.1
   badges: ^2.0.3
   flutter_launcher_icons: ^0.14.3
+  url_launcher: ^6.2.5
+ 
 
 flutter_launcher_icons:
   android: "launcher_icon"

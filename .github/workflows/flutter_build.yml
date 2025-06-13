@@ -1,0 +1,26 @@
+name: Flutter Simple Build
+
+on:
+  push:
+    branches: [main]  # Se ejecuta en cada push a la rama 'main'
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.2'  
+
+      - name: Descargar dependencias
+        run: flutter pub get
+
+      - name: Compilar la versión web
+        run: flutter build web
